@@ -1,0 +1,24 @@
+<?php
+<html>
+	<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	</head>
+
+	<body>
+		<h1>Histories($date)</h1>
+		<table>
+			<thead><tr><td>用户</td><td>消息</td><td>时间</td></tr></thead>
+			<tbody>
+				foreach($histories as $history) {
+					$nick = $history['nick'];
+					$body = $history['body'];
+					$style = $history['style'];
+					$time = date( 'm-d H:i', (float)$history['timestamp']/1000 ); 
+					<tr><td>{$nick}</td><td style=\"{$style}\">{$body}</td><td>{$time}</td></tr>
+				} 
+			</tbody>
+		</table>
+	</body>
+</html>
+
+
