@@ -1,8 +1,7 @@
 CREATE TABLE `webim_settings` (
 	  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
 	  `uid` varchar(40) NOT NULL DEFAULT '',
-	  `web` blob,
-	  `air` blob,
+	  `data` blob,
 	  `created_at` datetime DEFAULT NULL,
 	  `updated_at` datetime DEFAULT NULL,
 	  PRIMARY KEY (`id`)

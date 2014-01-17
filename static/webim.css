@@ -1,12 +1,12 @@
 /*!
- * Webim UI v3.0.1
+ * Webim UI v5.1 
  * http://www.webim20.cn/
  *
  * Copyright (c) 2013 Arron
  * Released under the MIT, BSD, and GPL Licenses.
  *
- * Date: Tue Dec 3 21:38:16 2013 +0800
- * Commit: 3e53b8e7e546abe9f3a4d3efa7566f61a2568337
+ * Date: Fri Jan 10 22:23:54 2014 +0800
+ * Commit: ac2b3a60253163624266c5a7a92c1dd0bac27cc7
  */
 
 body {
@@ -104,7 +104,7 @@ a .webim-icon, a .ui-icon{
 
 
 /*
- * jQuery UI CSS Framework 3.0.1
+ * jQuery UI CSS Framework 5.1 
  *
  * Copyright 2010, AUTHORS.txt (http://jqueryui.com/about)
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -942,6 +942,12 @@ a .webim-icon, a .ui-icon{
         position: fixed;
 }
 
+#webim-buddy .webim-buddy-unavailable img{
+	filter:progid:DXImageTransform.Microsoft.BasicImage(grayscale=1);
+	-webkit-filter: grayscale(100%);
+}
+
+
 /*
  * widget setting
  */
@@ -1192,6 +1198,7 @@ a .webim-icon, a .ui-icon{
 	float: right;
 	position: relative;
 	z-index: 2;
+	margin-left: 3px;
 }
 
 #webim-room ul li a img{
@@ -1282,6 +1289,9 @@ a .webim-icon, a .ui-icon{
 	*display:inline-block;
 }
 
+.webim-chatlink-offline{
+	background-image:url(images/chat_offline.gif);
+}
 .webim-notification {
         padding:1em .5em;
         overflow-x: hidden;
@@ -1300,4 +1310,149 @@ a .webim-icon, a .ui-icon{
 .webim-notification ul li{
         overflow: hidden;
         padding:.1em 0;
+}
+
+* html  .webim-popup, .webim-popup{
+	position: static; 
+	bottom: auto;
+	right: auto;
+	left: auto;
+	top:auto;
+	-webkit-box-shadow:none;
+	-moz-box-shadow:none;
+	box-shadow:none;
+	margin-left: 220px;
+}
+
+.webim-popup .webim-widgets{
+	float: none;
+	background: none;
+	margin-top: -1px;
+}
+
+.webim-popup .webim-widgets
+, .webim-popup .webim-layout-bg{
+	height: 26px;
+}
+
+.webim-popup .webim-window-normal .webim-window-tab{
+	border-width: 0;
+	border-right-width: 1px;
+	padding-bottom: 1px;
+}
+
+.webim-popup .webim-window-header h4{
+	margin: 3px 0;
+}
+
+.webim-popup .webim-window-window{
+	position: relative;
+	bottom: auto;
+	z-index: 5;
+	right: auto;
+	width: 100%;
+}
+
+.webim-popup-left{
+	width: 200px;
+	margin-left: -220px;
+	float: left;
+}
+
+.webim-popup .webim-popup-left .webim-window-content{
+	height: 350px;
+}
+
+.webim-popup .webim-chat-input{
+	height: 6em;
+}
+.webim-popup .webim-chat-input-wrap{
+	height: 80px;
+}
+
+.webim-popup .webim-chat-main
+, .webim-popup .webim-chat-content
+, .webim-popup .webim-member{
+	height: 319px;
+}
+
+.webim-popup-right{
+}
+
+.webim-popup .webim-window{
+	float: none;
+}
+
+.webim-popup .webim-window-tab-wrap {
+	display: none;
+}
+
+.webim-popup .webim-widgets .webim-window-tab-wrap {
+	display: block;
+}
+
+.webim-popup .webim-chat{
+}
+
+
+.webim-popup .webim-chat-sidebar {
+	right: 0;
+}
+
+.webim-popup .webim-member{
+	left: 0em;
+	-moz-border-radius-topleft: 0; -webkit-border-top-left-radius: 0; border-top-left-radius: 0; -moz-border-radius-bottomleft: 0; -webkit-border-bottom-left-radius: 0; border-bottom-left-radius: 0;
+	-moz-border-radius-topright: 4px; -webkit-border-top-right-radius: 4px; border-top-right-radius: 4px; -moz-border-radius-bottomright: 4px; -webkit-border-bottom-right-radius: 4px; border-bottom-right-radius: 4px;
+}
+
+.webim-popup #webim-buddy.webim-buddy-scroll .webim-buddy-content{
+	/* height: 25em; */
+	height: 24em;
+}
+
+.webim-popup #webim-room.webim-room-scroll .webim-room-content {
+	height: 24em;
+}
+
+.webim-popup #webim-buddy .webim-buddy-content{
+        padding: .2em 0 1.5em;
+}
+
+.webim-popup #webim-buddy.webim-buddy-simple ul li a span{
+	display: block;
+}
+
+.webim-popup .webim-chat .webim-chat-notice-wrap1{
+	position: relative;
+	z-index: 3;
+}
+
+.webim-popup .webim-chat .webim-chat-notice-wrap{
+	position: absolute;
+	width: 100%;
+}
+
+/*user icon*/
+/*
+.webim-popup .webim-user-show-dnd,.webim-popup  .webim-user-show-away,.webim-popup  .webim-user-show-invisible{
+	display: none !important;
+}
+ */
+
+.webim-popup .webim-window-window {
+	/*-moz-box-shadow:0 20px 40px rgba(0, 0, 0, 0.4);*/
+	-moz-box-shadow:0 10px 20px rgba(0, 0, 0, 0.4);
+	-webkit-box-shadow:0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+/*discuz X1*/
+#pcd .webim-chatlink{
+	padding-left: 0;
+	background-position: -30px 0;
+}
+
+/*discuz X1.5*/
+#pcd .ul_list .webim-chatlink{
+	background-position: 0px center;
+	padding-left: 20px;
 }

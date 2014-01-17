@@ -47,7 +47,7 @@ class Webim extends CI_Controller {
 	/**
 	 * Webim嵌入Javascript
 	 */
-	public function run() {
+	public function boot() {
 		$imc = $this->config->item('webim');
 		//插件关闭或用户未登录, 退出
 		if(! ($imc['isopen'] and $this->Webim_model->logined()) ) exit();
@@ -87,8 +87,8 @@ class Webim extends CI_Controller {
 		echo "var _IMC = " . json_encode($scriptVar) . ";" . PHP_EOL;
 
 		$script = <<<EOF
-_IMC.script = window.webim ? '' : ('<link href="' + _IMC.path + 'static/webim.' + _IMC.production_name + _IMC.min + '.css?' + _IMC.version + '" media="all" type="text/css" rel="stylesheet"/><link href="' + _IMC.path + 'static/themes/' + _IMC.theme + '/jquery.ui.theme.css?' + _IMC.version + '" media="all" type="text/css" rel="stylesheet"/><script src="' + _IMC.path + 'static/webim.' + _IMC.production_name + _IMC.min + '.js?' + _IMC.version + '" type="text/javascript"></script><script src="' + _IMC.path + 'static/i18n/webim-' + _IMC.local + '.js?' + _IMC.version + '" type="text/javascript"></script>');
-_IMC.script += '<script src="' + _IMC.path + 'static/webim.js?' + _IMC.version + '" type="text/javascript"></script>';
+_IMC.script = window.webim ? '' : ('<link href="' + _IMC.path + 'static/webim' + _IMC.min + '.css?' + _IMC.version + '" media="all" type="text/css" rel="stylesheet"/><link href="' + _IMC.path + 'static/themes/' + _IMC.theme + '/jquery.ui.theme.css?' + _IMC.version + '" media="all" type="text/css" rel="stylesheet"/><script src="' + _IMC.path + 'static/webim' + _IMC.min + '.js?' + _IMC.version + '" type="text/javascript"></script><script src="' + _IMC.path + 'static/i18n/webim-' + _IMC.local + '.js?' + _IMC.version + '" type="text/javascript"></script>');
+_IMC.script += '<script src="' + _IMC.path + 'static/webim.' + _IMC.production_name + 'js?' + _IMC.version + '" type="text/javascript"></script>';
 document.write( _IMC.script );
 
 EOF;
@@ -196,18 +196,18 @@ EOF;
 			$data->new_messages = $new_messages;
 
 			if(!$this->config->item('enable_room', 'webim')) {
+                //5.2 fix 20140112
 				//Add room online member count.
-				foreach ($data->rooms as $k => $v) {
-					$id = $v->id;
-					$cache_rooms[$id]->count = $v->count;
+				foreach ($data->rooms as $id => $count) {
+					$cache_rooms[$id]->count = $count;
 				}
 				//Show all rooms.
 			}
 			$data->rooms = $rooms;
 
 			$show_buddies = array();//For output.
-			foreach($data->buddies as $k => $v){
-				$id = $v->id;
+            //5.2 fix 20140112
+			foreach($data->buddies as $id => $show){
 				if(!isset($cache_buddies[$id])){
 					$cache_buddies[$id] = (object)array(
 						"id" => $id,
@@ -216,12 +216,13 @@ EOF;
 					);
 				}
 				$b = $cache_buddies[$id];
-				$b->presence = $v->presence;
-				$b->show = $v->show;
-				if( !empty($v->nick) )
-					$b->nick = $v->nick;
-				if( !empty($v->status) )
-					$b->status = $v->status;
+				$b->presence = "online";
+				$b->show = $show;
+                //5.2 fix 20140112
+				//if( !empty($v->nick) )
+				//	$b->nick = $v->nick;
+				//if( !empty($v->status) )
+				//	$b->status = $v->status;
 				#show online buddy
 				$show_buddies[] = $id;
 			}
@@ -342,7 +343,8 @@ EOF;
 			header("HTTP/1.0 404 Not Found");
 			exit("Can't join this room right now");
 		}
-		$room->count = $re->count;
+        //5.2 fix
+        $room->count = $re->{$id};
 		$this->_json_return($room);
 	}
 
