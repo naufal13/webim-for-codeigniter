@@ -70,6 +70,7 @@ class Webim extends CI_Controller {
 			'production_name' => 'ci',
 			'path' => $this->config->base_url(),
 			'is_login' => '1',
+            'is_visitor' => true,
 			'login_options' => '',
 			'user' => $this->Webim_model->current_user(),
 			//load setting
