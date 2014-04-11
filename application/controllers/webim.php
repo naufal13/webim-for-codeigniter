@@ -175,7 +175,7 @@ EOF;
                 }
                 foreach($activeRoomIds as $id){
                     if( isset($rtRooms[$id]) ) {
-                        $rtRooms[$id]['history'] = $this->WeIM_Model->histories($uid, $id, "grpchat" );
+                        $rtRooms[$id]['history'] = $this->WebIM_Model->histories($uid, $id, "grpchat" );
                     }
                 }
             }
@@ -344,7 +344,7 @@ EOF;
         //join the room
         $this->WebIM_Model->join_room($roomId, $uid, $user['nick']);
         //invite members
-        $members = explode(",", $this->input('members'));
+        $members = explode(",", $this->input->post('members'));
         $members = $this->WebIM_Plugin->buddies_by_ids($members);
         $this->WebIM_Model->invite_room($roomId, $members);
         //send invite message to members
@@ -366,7 +366,7 @@ EOF;
         $uid = $this->current_uid();
         $user  = $this->WebIM_Plugin->current_user();
         $roomId = $this->input->post('id');
-        $nick = $this->input('nick');
+        $nick = $this->input->post('nick');
         $room = $this->_find_room($this->WebIM_Plugin, $roomId);
         if(!$room) {
             $room = $this->_find_room($this->WebIM_Model, $roomId);

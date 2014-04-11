@@ -63,7 +63,7 @@ class WebIM_Model extends CI_Model {
      * Offline histories readed
      */
 	public function offline_readed($uid) {
-        $this->db->query("UPDATE {$this->_table('histories')} SET send = 1 where `to` = $uid and send = 0");
+        $this->db->query("UPDATE {$this->_table('histories')} SET send = 1 where `to` = ? and send = 0", array($uid));
 	}
 
     /**
@@ -89,7 +89,7 @@ class WebIM_Model extends CI_Model {
      * User rooms
      */
     public function rooms($uid) {
-        $sql = "SELECT t1.room as name, t2.nick as nick from {$this->_table('members')} t1 left join {$this->_table('rooms')} on t1.room = t2.name where t1.uid = ?";
+        $sql = "SELECT t1.room as name, t2.nick as nick from {$this->_table('members')} t1 left join {$this->_table('rooms')} t2 on t1.room = t2.name where t1.uid = ?";
         $query = $this->db->query($sql, array($uid));
         $rooms = array();
         foreach($query->result() as $row) {
@@ -97,7 +97,7 @@ class WebIM_Model extends CI_Model {
                 'id' => $row->name,
                 'nick' => $row->nick,
                 "url" => "#", //TODO
-                "pic_url" => '',//TODO
+                "pic_url" => $this->_image('room.png'),//TODO
                 "status" => '',
                 "temporary" => true,
                 "blocked" => $this->is_room_blocked($row->name, $uid)
@@ -154,7 +154,7 @@ class WebIM_Model extends CI_Model {
     public function join_room($room, $uid, $nick) {
         $query = $this->db->query("SELECT * FROM {$this->_table('members')} WHERE uid = ? and room = ?", array($uid, $room));
         if($query->num_rows() == 0) {
-            $this->db->query("INSERT INTO {$this->_table('members')}(uid, nick, room, joined) VALUES(?, ?, ?, ?)",
+            $this->db->query("INSERT INTO {$this->_table('members')}(uid, room, nick, joined) VALUES(?, ?, ?, ?)",
                 array($uid, $room, $nick, date('Y-m-d H:i:s')));
         }
     }
@@ -197,4 +197,8 @@ class WebIM_Model extends CI_Model {
         $this->db->query("DELETE FROM {$this->_table('blocked')} WHERE room = ? and uid = ?", array($room, $uid));
     }
 
+    private function _image($src) {
+		$CI = &get_instance();
+        return $CI->config->base_url().'/static/images/'.$src;
+    }
 }

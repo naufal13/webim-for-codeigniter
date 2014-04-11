@@ -181,7 +181,7 @@ class WebIM_plugin extends CI_Model {
 	 */
 	public function rooms($uid) {
 		$demoRoom = array(
-			'id' => '1',
+			'id' => 'room1',
             'name' => 'room1',
 			'nick' => 'Persist Room',
 			'url' => "#",
@@ -206,13 +206,15 @@ class WebIM_plugin extends CI_Model {
 	function rooms_by_ids($ids) {
         $rooms = array();
         foreach($ids as $id) {
-            $rooms[] = array(
-                'id' => $id,
-                'name' => $id,
-                'nick' => 'room'.$id,
-                'url' => "#",
-                'pic_url' => $this->_image('room.png')
-            );
+            if($id === 'room1') { 
+                $rooms[] = array(
+                    'id' => $id,
+                    'name' => $id,
+                    'nick' => 'room'.$id,
+                    'url' => "#",
+                    'pic_url' => $this->_image('room.png')
+                );
+            }
         }
 		return $rooms;
 	}
