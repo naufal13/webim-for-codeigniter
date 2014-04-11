@@ -1,182 +1,200 @@
 <?php
 
 /**
- * Webim集成好友关系、群组关系模型。不对应任何库表。
+ * WebIM Model
  */
-class Webim_model extends CI_Model {
-
-	/*
-	 * 当前用户或者访客
-	 */
-	private $user = NULL;
-
-	/*
-	 * 角色: 管理员、用户、访客
-	 */
-	public $role = 'user';
-
-	/*
-	 * 是否登录
-	 */
-	private $is_login = false;
+class WebIM_Model extends CI_Model {
 
 	function __construct() {
 		parent::__construct();
 	}
 
-	/*
-	 * 初始化当前用户信息
-	 */
-	function initialize($cfg) {
-		// get CodeIgniter instance
-		$CI = &get_instance();
-		if($this->current_uid()) {
-			$this->_init_user();			
-			$this->is_login = true;
-		} else if($CI->config->item('visitor', 'webim')) {
-			$this->_init_visitor();
-			$this->is_login = true;
-		}
+    /**
+     * table prefix
+     */
+    private function _table($name) {
+        return $this->db->dbprefix($name);
+    }
+
+    /**
+     * Read histories
+     */
+    public function histories($uid, $with, $type = 'chat',  $limit = 30) {
+        if( $type === 'chat' ) {
+            $sql = "SELECT * FROM {$this->_table('histories')} where `type` = 'chat' AND (`to`= ? AND `from`= ? AND `fromdel` != 1) OR (`send` = 1 AND `from`= ? AND `to`= ? AND `todel` != 1)  ORDER BY timestamp DESC LIMIT $limit";
+            $vars = array($with, $uid, $with, $uid);
+        } else {
+            $sql = "SELECT * FROM {$this->_table('histories')} where `type` = 'grpchat' and `to` = ? and send = 1 ORDER BY timestamp DESC limit $limit";
+            $vars = array($with);
+        }
+        $query = $this->db->query($sql, $vars);
+        return array_reverse($query->result_array());
+    }
+
+    
+    /**
+     * Read offline histories
+     */
+	public function offline_histories($uid, $limit = 100) {
+        $sql = "SELECT * from {$this->_table('histories')} where `to` = '$uid' and send = 0 ORDER BY timestamp DESC limit $limit";
+        $query = $this->db->query($sql);
+        return array_reverse( $query->result_array() );
 	}
 
-	/*
-	 * 当前用户是否登录
-	 */
-	function logined() {
-		return $this->is_login;	
+    /**
+     * Save history
+     */
+    public function insert_history($message) {
+        $sql = "INSERT into {$this->_table('histories')}(`send`, `type`, `to`, `from`, `nick`, `body`, `style`, `timestamp`) values(?, ?, ?, ?, ?, ?, ?, ?)";
+        $vars = array_values($message);
+        $this->db->query($sql, $vars);
+    }
+
+    /**
+     * Clear histories
+     */
+    public function clear_histories($uid, $with) {
+        $this->db->query("UPDATE {$this->_table('histories')} SET fromdel = 1 where `from` = ? and `to` = ?", array($uid, $with));
+        $this->db->query("UPDATE {$this->_table('histories')} SET todel = 1 where `to` = ? and `from` = ?", array($uid, $with));
+        $this->db->query("DELETE from {$this->_table('histories')} where todel = 1 and fromdel = 1");
+    }
+
+    /**
+     * Offline histories readed
+     */
+	public function offline_readed($uid) {
+        $this->db->query("UPDATE {$this->_table('histories')} SET send = 1 where `to` = $uid and send = 0");
 	}
 
-	function current_uid() {
-		return $_SESSION['mid'];
-	}
+    /**
+     * User setting
+     */
+    public function setting($uid, $data = null) {
+        $query = $this->db->query("SELECT data from {$this->_table('settings')} WHERE uid = ?", array($uid));
+        if($query->num_rows() > 0) { $setting = $query->row(); }
+        if (func_num_args() === 1) { //get setting
+            if($setting) return json_decode($setting->data); 
+           return null;
+        } 
+        //save setting
+        if($setting) {
+            if(!is_string($data)) { $data = json_decode($data); }
+            $this->db->query("UPDATE {$this->_table('settings')} set data = ? where uid = ?", array($data, $uid));
+        } else {
+            $this->db->query("INSERT INTO {$this->_table('settings')}(uid, data, created) VALUES(?, ?, ?)", array($uid, $data, date( 'Y-m-d H:i:s' )));
+        }
+    }
 
-	function current_user() {
-		return $this->user;	
-	}
+    /**
+     * User rooms
+     */
+    public function rooms($uid) {
+        $sql = "SELECT t1.room as name, t2.nick as nick from {$this->_table('members')} t1 left join {$this->_table('rooms')} on t1.room = t2.name where t1.uid = ?";
+        $query = $this->db->query($sql, array($uid));
+        $rooms = array();
+        foreach($query->result() as $row) {
+            $rooms[] = array(
+                'id' => $row->name,
+                'nick' => $row->nick,
+                "url" => "#", //TODO
+                "pic_url" => '',//TODO
+                "status" => '',
+                "temporary" => true,
+                "blocked" => $this->is_room_blocked($row->name, $uid)
+            );
+        }
+        return $rooms;
+    }
 
-	function is_admin() {
-		return $this->role == 'admin';
-	}
+    /**
+     * Rooms by ids
+     */
+    public function rooms_by_ids($ids) {
+        if($ids === '' || empty($ids)) return array();
+        $ids = implode(',', array_map(function($id) {return "'$id'";}, $ids));
+        $sql = "SELECT * from {$this->_table('rooms')} where name in ({$ids})";
+        $query = $this->db->query($sql);
+        return $query->result_array();
+    }
 
-	function is_visitor() {
-		return $this->role == 'visitor';
-	}
+    /**
+     * Room members
+     */
+    public function members($room) {
+        $query = $this->db->query("SELECT uid as id, nick FROM {$this->_table('members')} WHERE room = ?", array($room));
+        return $query->result_array();
+    }
 
-	/*
-	 * 接口函数: 读取当前用户的好友在线好友列表
-	 *
-	 * Buddy对象属性:
-	 *
-	 * 	uid: 好友uid
-	 * 	id:  同uid
-	 *	nick: 好友昵称
-	 *	pic_url: 头像图片
-	 *	show: available | unavailable
-	 *  url: 好友主页URL
-	 *  status: 状态信息 
-	 *  group: 所属组
-	 */
-	function buddies() {
-		//根据当前用户id获取好友列表
-		return array(clone $this->user);
-	}
+    /**
+     * Create room
+     */
+    public function create_room($data) {
+        $name = $data['name'];
+        $query = $this->db->query("SELECT * from {$this->_table('rooms')} WHERE name = ?", array($name));
+        if( $query->num_rows() > 0 ) {
+            return (array)$query->row();
+        }
+        $this->db->query("INSERT INTO {$this->_table('rooms')}(owner, name, nick, created) VALUES(?, ?, ?, ?)", 
+            array($data['owner'], $data['name'], $data['nick'], date( 'Y-m-d H:i:s' )));
+        //TODO return $data;
+    }
 
-	/*
-	 * 接口函数: 根据好友id列表、陌生人id列表读取用户, id列表为逗号分隔字符串
-	 *
-	 * 用户属性同上
-	 */
-	function buddies_by_ids($friend_uids = "", $stranger_uids = "") {
-		return array();
-	}
+    /**
+      * Invite members into room
+     */
+    public function invite_room($room, $members) {
+        foreach($members as $member) {
+            $this->join_room($room, $member['uid'], $member['nick']);
+        }
+    }
 
-	/*
-	 * 接口函数：读取当前用户的Room列表
-	 *
-	 * Room对象属性:
-	 *
-	 *	id:		Room ID,
-	 *	nick:	显示名称
-	 *	url:	Room主页地址
-	 *	pic_url: Room图片
-	 *	status: Room状态信息
-	 *	count:  0
-	 *	all_count: 成员总计
-	 *	blocked: true | false 是否block
-	 */
-	function rooms() {
-		//根据当前用户id获取群组列表
-		$demoRoom = array(
-			"id" => '1',
-			"nick" => 'demoroom',
-			"url" => "#",
-			"pic_url" => "/static/images/chat.png",
-			"status" => "demo room",
-			"count" => 0,
-			"all_count" => 1,
-			"blocked" => false,
-		);
-		return array( $demoRoom );	
-	}
-	
-	/*
-	 * 接口函数: 根据id列表读取rooms, id列表为逗号分隔字符串
-	 *
-	 * Room对象属性同上
-	 */
-	function rooms_by_ids($ids) {
-		return array();	
-	}
+    /**
+     * Join Room
+     */
+    public function join_room($room, $uid, $nick) {
+        $query = $this->db->query("SELECT * FROM {$this->_table('members')} WHERE uid = ? and room = ?", array($uid, $room));
+        if($query->num_rows() == 0) {
+            $this->db->query("INSERT INTO {$this->_table('members')}(uid, nick, room, joined) VALUES(?, ?, ?, ?)",
+                array($uid, $room, $nick, date('Y-m-d H:i:s')));
+        }
+    }
 
-	/*
-	 * 接口函数: 当前用户通知列表
-	 *
-	 * Notification对象属性:
-	 *
-	 * 	text: 文本
-	 * 	link: 链接
-	 */	
-	function notifications() {
-		return array();	
-	}
+    /**
+     * Leave room
+     */
+    public function leave_room($room, $uid) {
+        $this->db->query("DELETE FROM {$this->_table('members')} WHERE room = ? and uid = ?", array($room, $uid));
+        $query = $this->db->query("SELECT count(id) as total from {$this->_table('members')} where room = ?", array($room));
+        //if no members, room deleted...
+        if($query->num_rows() > 0 && $query->row()->total === 0) {
+           $this->db->query("DELETE FROM {$this->_table('rooms')} WHERE name = ?", array($room)); 
+        }
+    }
 
-	/*
-	 * 接口函数: 初始化当前用户对象，与站点用户集成.
-	 */
-	private function _init_user() {
-		$CI = &get_instance();
-		$uid = $_SESSION['uid'];
-		$this->user = (object)array(
-			'uid' => $uid,
-			'id' => $uid,
-			'nick' => "nick".$id,//TODO: 
-			'pic_url' => $CI->config->base_url() . "/static/images/chat.png", //TODO:
-			'show' => "available",
-			'url' => "#",
-			'status' => "",
-		);
-	}
+    /**
+     * Block room
+     */
+    public function block_room($room, $uid) {
+        $query = $this->db->query("SELECT id FROM {$this->_table('blocked')} WHERE room = ? and uid = ?", array($room, $uid));
+        if($query->num_rows() == 0) {
+            $this->db->query("INSERT INTO {$this->_table('blocked')}(room, uid, blocked) VALUES(?, ?, ?)", array($room, $uid, date('Y-m-d H:i:s')));
+        }
+    }
 
-	/*
-	 * 接口函数: 创建访客对象，可根据实际需求修改.
-	 */
-	private function _init_visitor() {
-		$CI = &get_instance();
-		if ( isset($_COOKIE['_webim_visitor_id']) ) {
-			$id = $_COOKIE['_webim_visitor_id'];
-		} else {
-			$id = substr(uniqid(), 6);
-			setcookie('_webim_visitor_id', $id, time() + 3600 * 24 * 30, "/", "");
-		}
-		$this->role = 'visitor';
-		$this->user = (object)array(
-			'uid' => $id,
-			'id' => $id,
-			'nick' => "v".$id,
-			'pic_url' => $CI->config->base_url() . "/static/images/chat.png",
-			'show' => "available",
-			'url' => "#",
-		);
-	}
+    /**
+     * Is room blocked
+     */
+    public function is_room_blocked($room, $uid) {
+        $query = $this->db->query("SELECT id FROM {$this->_table('blocked')} WHERE room = ? and uid = ?", array($room, $uid));
+        return ($query->num_rows() > 0); 
+    }
+
+
+    /**
+     * Unblock room
+     */
+    public function unblock_room($room, $uid) {
+        $this->db->query("DELETE FROM {$this->_table('blocked')} WHERE room = ? and uid = ?", array($room, $uid));
+    }
 
 }

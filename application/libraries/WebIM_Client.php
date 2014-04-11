@@ -3,9 +3,12 @@
 /**
  * PHP WebIM Library for interacting with NexTalk server.
  *
- * @see http://nextalk.im/docs/api
+ * Copy from webim/webim-php
+ *
+ * @see https://github.com/webim/webim-php
+ *
  */
-class Webimc {
+class WebIM_Client {
 
     /**
     * Version
@@ -15,7 +18,7 @@ class Webimc {
     /**
      * Server
      */
-    const SERVER = 'http://nextalk.im:8000';
+    const SERVER = 'http://t.nextalk.im:8000';
 
     const TIMEOUT = 15;
 
@@ -45,28 +48,30 @@ class Webimc {
      * APIKEY
      */
     private $apikey;
+
+    /**
+     * Ticket
+     */
     private $ticket;
+
+    /**
+     * NexTalk Server
+     */
     private $server;
     private $version;
     private $timeout;
 
-    //TODO:
     function __construct($params = array()) {
-        $endpoint = params['endpoint']; 
-        $domain = params['domain']; 
-        $apikey = params['apikey']; 
-        $server = params['server'];
-        $ticket = params['ticket']; 
-        $version= self::VERSION,
-        $timeout = self::TIMEOUT
-        if(is_array($endpoint)) $endpoint = (object)$endpoint;
+        $endpoint = $params['endpoint']; 
+        if(is_array($endpoint)) 
+            $endpoint = (object)$endpoint;
         $this->endpoint= $endpoint;
-        $this->domain = $domain;
-        $this->apikey = $apikey;
-        $this->ticket = $ticket;
-        $this->server = $server;
-        $this->version = $version;
-        $this->timeout = $timeout;
+        $this->domain = $params['domain'];
+        $this->apikey = $params['apikey']; 
+        $this->ticket = $params['ticket']; 
+        $this->server = $params['server'];
+        $this->version = self::VERSION;
+        $this->timeout = self::TIMEOUT;
     }
 
 	/**
@@ -85,12 +90,14 @@ class Webimc {
         if(is_array($buddy_ids)) $buddy_ids = implode(',', $buddy_ids);
         if(is_array($room_ids)) $room_ids = implode(',', $room_ids);
         if( !$show ) $show = $this->endpoint->show;
+        $endpoint = $this->endpoint;
+        $status = isset($endpoint->status) ?  $endpoint->status : '';
 		$data = array_merge($this->reqdata(), array(
 			'rooms'=> $room_ids, 
 			'buddies'=> $buddy_ids, 
-			'name'=> $this->endpoint->id, 
-			'nick'=> $this->endpoint->nick, 
-			'status'=> $this->endpoint->status, 
+			'name'=> $endpoint->id, 
+			'nick'=> $endpoint->nick, 
+			'status'=> $status, 
 			'show' => $show
 		));
 		$response = $this->request('presences/online', $data, 'POST');

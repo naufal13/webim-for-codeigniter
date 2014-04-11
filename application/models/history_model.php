@@ -17,8 +17,8 @@ class History_model extends CI_Model {
 			8 => 'timestamp',
 			9 => 'todel',
 			10 => 'fromdel',
-			11 => 'created_at',
-			12 => 'updated_at',
+			11 => 'created',
+			12 => 'updated',
 			'_autoinc' => true,
 			'_pk' => 'id' 
 	);

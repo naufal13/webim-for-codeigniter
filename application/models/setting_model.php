@@ -8,8 +8,8 @@ class Setting_model extends CI_Model {
 			0 => 'id',
 			1 => 'uid',
 			2 => 'data',
-			4 => 'created_at',
-			5 => 'updated_at',
+			4 => 'created',
+			5 => 'updated',
 	);
 
 	function __construct() {

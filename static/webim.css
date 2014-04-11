@@ -1,12 +1,12 @@
 /*!
- * Webim UI v5.1 
+ * Webim UI v5.4 
  * http://www.webim20.cn/
  *
  * Copyright (c) 2013 Arron
  * Released under the MIT, BSD, and GPL Licenses.
  *
- * Date: Sun Jan 26 09:06:04 2014 +0800
- * Commit: 91fdef4db32b019f10691244a9919a31ac810410
+ * Date: Wed Apr 9 09:01:32 2014 +0800
+ * Commit: 21af11369f5df36ff9dbc90c969b357413b45a88
  */
 
 body {
@@ -104,7 +104,7 @@ a .webim-icon, a .ui-icon{
 
 
 /*
- * jQuery UI CSS Framework 5.1 
+ * jQuery UI CSS Framework 5.4 
  *
  * Copyright 2010, AUTHORS.txt (http://jqueryui.com/about)
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -955,8 +955,10 @@ a .webim-icon, a .ui-icon{
 
 #webim-buddy .webim-buddy-unavailable img{
 	filter:progid:DXImageTransform.Microsoft.BasicImage(grayscale=1);
-	-webkit-filter: grayscale(100%);
+    filter: gray; /* IE6-9 */
+	-webkit-filter: grayscale(100%); /*webkit*/
 }
+
 
 
 /*
@@ -1257,11 +1259,11 @@ a .webim-icon, a .ui-icon{
 }
 
 #webim-room .webim-room-discussion-list li{
-	padding: 5px 10px;
+	padding: 0px 2px;
 }
 
 #webim-room .webim-room-discussion-list li input{
-	margin-right: 10px;
+	margin-right: 5px;
 }
 
 
@@ -1302,6 +1304,17 @@ a .webim-icon, a .ui-icon{
 
 .webim-chatlink-offline{
 	background-image:url(images/chat_offline.gif);
+}
+.webim-chaticon {
+	cursor:pointer;
+	padding-left: 1.2em;
+	background:url(images/chat_offline.gif) no-repeat 2px center;
+	display:inline;
+	*display:inline-block;
+}
+
+.webim-chaticon-online{
+	background-image:url(images/chat_online.gif);
 }
 .webim-notification {
         padding:1em .5em;
@@ -1456,14 +1469,3 @@ a .webim-icon, a .ui-icon{
 	-webkit-box-shadow:0 10px 20px rgba(0, 0, 0, 0.4);
 }
 
-/*discuz X1*/
-#pcd .webim-chatlink{
-	padding-left: 0;
-	background-position: -30px 0;
-}
-
-/*discuz X1.5*/
-#pcd .ul_list .webim-chatlink{
-	background-position: 0px center;
-	padding-left: 20px;
-}

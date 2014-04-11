@@ -76,7 +76,7 @@
 	<p class="footer">Page rendered in <strong>{elapsed_time}</strong> seconds</p>
 </div>
 
-<script type="text/javascript" src="index.php/webim/run"></script>
+<script type="text/javascript" src="index.php/webim/boot"></script>
 
 </body>
 </html>
