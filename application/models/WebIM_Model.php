@@ -74,7 +74,7 @@ class WebIM_Model extends CI_Model {
         if($query->num_rows() > 0) { $setting = $query->row(); }
         if (func_num_args() === 1) { //get setting
             if($setting) return json_decode($setting->data); 
-           return null;
+            return new stdClass();
         } 
         //save setting
         if($setting) {
