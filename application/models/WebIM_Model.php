@@ -70,6 +70,7 @@ class WebIM_Model extends CI_Model {
      * User setting
      */
     public function setting($uid, $data = null) {
+        $setting = null;
         $query = $this->db->query("SELECT data from {$this->_table('settings')} WHERE uid = ?", array($uid));
         if($query->num_rows() > 0) { $setting = $query->row(); }
         if (func_num_args() === 1) { //get setting
