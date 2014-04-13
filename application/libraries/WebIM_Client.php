@@ -193,7 +193,7 @@ class WebIM_Client {
 	 *
 	 */
 	public function message($from, $to, $body, $type = 'chat', $style='', $timestamp = null) {
-        if(!$timestamp) $timestamp = $this->microtimeFloat() * 1000;
+        if(!$timestamp) $timestamp = microtime(true) * 1000;
 		$data = array_merge($this->reqdata(), array(
 			'nick' => $this->endpoint->nick,
 			'to' => $to,
@@ -253,14 +253,12 @@ class WebIM_Client {
         if($method == 'GET') {
             $url .= '?'.http_build_query($data);
         }
-
         //curl request
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_USERPWD, "{$this->domain}:{$this->apikey}");
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
-        //curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->verify_ssl);
         if($method == 'POST') {
             //$data = array_map(array($this, "sanitize_curl_parameter"), $data);
             curl_setopt($ch, CURLOPT_POST, 1);
@@ -277,7 +275,7 @@ class WebIM_Client {
 
         $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ($code != self::STATUS_OK) {
-          throw new WebIMException($code, $url, "HTTP status code: $code, response=$response");
+            throw new WebIMException($code, $url, "HTTP status code: $code, response=$response");
         }
 
         curl_close($ch);
@@ -303,11 +301,6 @@ class WebIM_Client {
         );
         if($this->ticket) $data['ticket'] = $this->ticket;
         return $data;
-    }
-
-    private function microtimeFloat() {
-        list($usec, $sec) = explode(" ", microtime());
-        return ((float)$usec + (float)$sec);
     }
 
 }

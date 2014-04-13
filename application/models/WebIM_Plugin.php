@@ -186,7 +186,7 @@ class WebIM_plugin extends CI_Model {
 			'nick' => 'Persist Room',
 			'url' => "#",
 			'pic_url' => $this->_image('room.png'),
-			'status' => "Persist Room",
+			'status' => "Room",
 			'blocked' => false,
             'temporary' => false
 		);
@@ -234,7 +234,7 @@ class WebIM_plugin extends CI_Model {
                 'nick' => 'user'.$id
             ); 
         }
-        return $members;
+        return $rooms;
     }
 
 	/*
@@ -263,5 +263,4 @@ class WebIM_plugin extends CI_Model {
     }
 
 }
-
 

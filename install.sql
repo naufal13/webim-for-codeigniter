@@ -38,6 +38,7 @@ CREATE TABLE `webim_rooms` (
       `name` varchar(40) NOT NULL,
       `nick` varchar(60) NOT NULL DEFAULT '',
       `topic` varchar(60) DEFAULT NULL,
+      `url` varchar(100) DEFAULT '#',
       `created` datetime DEFAULT NULL,
       `updated` datetime DEFAULT NULL,
       PRIMARY KEY (`id`),

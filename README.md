@@ -18,6 +18,8 @@ Database
 
 3. configure 'application/config/database.php'
 
+4. configure 'application/config/webim.php'
+
 Config
 =======
 
@@ -26,6 +28,12 @@ Config
 Develop
 =======
 
-Coding Webim_model.php, History_model.php, Setting_model.php
+Coding application/models/WebIM_Plugin.php
+
+## Author
+
+http://nextalk.im
+
+ery.lee at gmail.com
 
 
