@@ -421,6 +421,11 @@ EOF;
             }
             $rtMembers[] = $m;
         }
+        usort($rtMembers, function($m1, $m2) {
+            if($m1['presence'] === $m2['presence']) return 0;
+            if($m1['presence'] === 'online') return 1;
+            return -1;
+        });
         $this->_json_return($rtMembers);
 	}
 	
