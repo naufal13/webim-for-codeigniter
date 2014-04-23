@@ -2198,8 +2198,8 @@ model("history", {
  * Copyright (c) 2013 Arron
  * Released under the MIT, BSD, and GPL Licenses.
  *
- * Date: Tue Apr 15 09:51:45 2014 +0800
- * Commit: e4153daaf668aeb65b29160546bb76dafb4f70ae
+ * Date: Fri Apr 18 16:33:45 2014 +0800
+ * Commit: f624aa19f33d55e469361fbc5615a7d8e6f99c88
  */
 (function(window,document,undefined){
 
@@ -4943,7 +4943,7 @@ widget("setting",{
 		//this._initEvents();
 		var copyright = this.options.copyright;	
 		if( copyright ) {
-			copyright = copyright === true ? '<p style="margin: 5px 10px;text-align:right;"><a class="webim-gray" href="http://nextalk.im/" target="_blank">Powered by NextTalk</a></p>' : copyright;
+			copyright = copyright === true ? '<p style="margin: 5px 10px;"><a class="webim-gray" href="http://nextalk.im/" target="_blank">Powered by <strong>NexTalk</strong><em>&nbsp5.4.1</em></a></p>' : copyright;
 			this.element.appendChild(createElement(copyright));
 		}
 	},

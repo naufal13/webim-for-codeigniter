@@ -5,6 +5,7 @@
     var cookie_key = "_webim_cookie_";
 	if( _IMC.is_visitor ) { cookie_key = "_webim_v_cookie_"; }
     if( _IMC.user != "" ) { cookie_key = cookie_key + _IMC.user.id; }
+    webim.status.defaults.key = cookie_key;
 	webim.route( {
 		online: path + "/index.php/webim/online",
 		offline: path + "/index.php/webim/offline",
@@ -39,12 +40,17 @@
 			jsonp: _IMC.jsonp
 		},
 		soundUrls: soundUrls,
+		//layout: "layout.popup",
+        layoutOptions: {
+            unscalable: _IMC.is_visitor
+        },
 		buddyChatOptions: {
             downloadHistory: !_IMC.is_visitor,
 			//simple: _IMC.is_visitor,
 			upload: _IMC.upload && !_IMC.is_visitor
 		},
 		roomChatOptions: {
+            downloadHistory: !_IMC.is_visitor,
 			upload: _IMC.upload
 		}
 	}), im = ui.im;
@@ -59,16 +65,17 @@
 		showUnavailable: _IMC.show_unavailable,
 		is_login: _IMC['is_login'],
 		disable_login: true,
-		collapse: true,
-		disable_user: _IMC.is_visitor,
+		collapse: false,
+		//disable_user: _IMC.is_visitor,
+        //simple: _IMC.is_visitor,
 		loginOptions: _IMC['login_options']
 	});
     if(!_IMC.is_visitor) {
-        if(_IMC.enable_room )ui.addApp("room", { discussion: true });
+        if( _IMC.enable_room )ui.addApp("room", { discussion: (_IMC.discussion && !_IMC.is_visitor) });
         if(_IMC.enable_noti )ui.addApp("notification");
     }
     if(_IMC.enable_chatlink) ui.addApp("chatbtn");
-    ui.addApp("setting", {"data": webim.setting.defaults.data});
+    ui.addApp("setting", {"data": webim.setting.defaults.data, "copyright": true});
 	ui.render();
 	_IMC['is_login'] && im.autoOnline() && im.online();
 })(webim);
