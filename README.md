@@ -1,5 +1,5 @@
 
-webim-for-codeigniter
+WebIM-for-CodeIgniter
 =====================
 
 webim for CodeIgniter

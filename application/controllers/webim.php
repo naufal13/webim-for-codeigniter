@@ -65,7 +65,7 @@ class Webim extends CI_Controller {
 		$this->load->model('WebIM_Plugin');
 
         //load user
-        $user = $this->WebIM_Plugin-->user();
+        $user = $this->WebIM_Plugin->user();
         if($user == null &&  $IMC['visitor']) {
             $user = $this->WebIM_Model->visitor();
         }
@@ -180,7 +180,7 @@ EOF;
             }
         }
         //buddies by ids
-		$buddiesByIds = $this->WebIM_Plugin->buddies_by_ids($buddyIdsWithoutInfo);
+		$buddiesByIds = $this->WebIM_Plugin->buddies_by_ids($uid, $buddyIdsWithoutInfo);
         //all buddies
         $buddies = array_merge($buddies, $buddiesByIds);
         $allBuddyIds = array();
@@ -197,7 +197,7 @@ EOF;
 		}
 
 		//===============Online===============
-		$data = $this->client->online($allBuddyIds, $roomIds, $show);
+		$data = $this->webim_client->online($allBuddyIds, $roomIds, $show);
 		if( $data->success ) {
             $rtBuddies = array();
             $presences = $data->presences;
@@ -215,7 +215,7 @@ EOF;
 			//histories for active buddies and rooms
 			foreach($activeBuddyIds as $id) {
                 if( isset($rtBuddies[$id]) ) {
-                    $rtBuddies[$id]->history = $this->model->histories($uid, $id, "chat" );
+                    $rtBuddies[$id]->history = $this->WebIM_Model->histories($uid, $id, "chat" );
                 }
 			}
             if( !$IMC['show_unavailable'] ) {
@@ -232,7 +232,7 @@ EOF;
                 }
                 foreach($activeRoomIds as $id){
                     if( isset($rtRooms[$id]) ) {
-                        $rtRooms[$id]->history = $this->model->histories($uid, $id, "grpchat" );
+                        $rtRooms[$id]->history = $this->WebIM_Model->histories($uid, $id, "grpchat" );
                     }
                 }
             }
@@ -410,12 +410,12 @@ EOF;
         $this->WebIM_Model->join_room($roomId, $uid, $this->user->nick);
         //invite members
         $members = explode(",", $this->input->post('members'));
-        $members = $this->WebIM_Plugin->buddies_by_ids($members);
+        $members = $this->WebIM_Plugin->buddies_by_ids($uid, $members);
         $this->WebIM_Model->invite_room($roomId, $members);
         //send invite message to members
         foreach($members as $m) {
             $body = "webim-event:invite|,|{$roomId}|,|{$nick}";
-            $this->client->message(null, $m->id, $body); 
+            $this->webim_client->message(null, $m->id, $body); 
         }
         //tell server that I joined
         $this->webim_client->join($roomId);
@@ -466,9 +466,9 @@ EOF;
         if($room) {
             $members = $this->WebIM_Plugin->members($id);
         } else {
-            $room = $this->_find_room($this->WebIM_Model, $roomId);
+            $room = $this->_find_room($this->WebIM_Model, $id);
             if($room) {
-                $members = $this->WebIM_Model->members($roomId);
+                $members = $this->WebIM_Model->members($id);
             }
         }
         if(!$room) {

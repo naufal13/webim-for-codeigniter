@@ -180,7 +180,7 @@ class WebIM_Model extends CI_Model {
      */
     public function invite_room($room, $members) {
         foreach($members as $member) {
-            $this->join_room($room, $member->uid, $member->nick);
+            $this->join_room($room, $member->id, $member->nick);
         }
     }
 
@@ -245,7 +245,8 @@ class WebIM_Model extends CI_Model {
             setcookie('_webim_visitor_id', $id, time() + 3600 * 24 * 30, "/", "");
         }
         $vid = 'vid:'. $id;
-        $visitor = $this->db->get_row($this->db->prepare( "SELECT * FROM {$this->db->visitors} WHERE name = %s", $vid ));
+        $query = $this->db->query("SELECT * FROM {$this->_table('visitors')} WHERE name = ?", array($vid));
+        if($query->num_rows() > 0) { $visitor = $query->row(); }
         if( !$visitor ) {
             //require_once 'lib/IP.class.php';
             $ipaddr = isset($_SERVER['X-Forwarded-For']) ? $_SERVER['X-Forwarded-For'] : $_SERVER["REMOTE_ADDR"];

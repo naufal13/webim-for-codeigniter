@@ -46,7 +46,7 @@ class WebIM_plugin extends CI_Model {
      *
      * @return object current user
      */
-    function user() {
+    public function user() {
         global $_SESSION;
 		$uid = isset($_SESSION['uid']) ? $_SESSION['uid'] : null;
         if( !$uid ) return null;
@@ -97,7 +97,7 @@ class WebIM_plugin extends CI_Model {
      *
 	 * Buddy
 	 */
-	function buddies_by_ids($uid, $ids) {
+	public function buddies_by_ids($uid, $ids) {
         return array_map( array($this, '_buddy'), $ids );
 	}
 
@@ -112,7 +112,7 @@ class WebIM_plugin extends CI_Model {
             'presence' => 'offline',
             'show' => 'unavailable',
             'status' => '#',
-            'pic_url' => WEBIM_IMAGE('male.png')
+            'pic_url' => $this->_image('male.png')
         );
     }
 
@@ -134,14 +134,14 @@ class WebIM_plugin extends CI_Model {
 	 *	all_count:  count of all members
 	 *	blocked:    true | false
 	 */
-	function rooms($uid) {
+	public function rooms($uid) {
         //TODO: DEMO CODE
 		$room = (object)array(
 			'id' => 'room1',
             'name' => 'room1',
 			'nick' => 'Room',
 			'url' => "#",
-			'pic_url' => WEBIM_IMAGE('room.png'),
+			'pic_url' => $this->_image('room.png'),
 			'status' => "Room",
 			'blocked' => false,
             'temporary' => false
@@ -160,7 +160,7 @@ class WebIM_plugin extends CI_Model {
 	 * Room
      *
 	 */
-	function rooms_by_ids($uid, $ids) {
+	public function rooms_by_ids($uid, $ids) {
         $rooms = array();
         foreach($ids as $id) {
             if($id === 'room1') { 
@@ -169,7 +169,7 @@ class WebIM_plugin extends CI_Model {
                     'name' => $id,
                     'nick' => 'room'.$id,
                     'url' => "#",
-                    'pic_url' => WEBIM_IMAGE('room.png')
+                    'pic_url' => $this->_image('room.png')
                 );
             }
         }
@@ -182,7 +182,7 @@ class WebIM_plugin extends CI_Model {
      * $param $room string roomid
      * 
      */
-    function members($room) {
+    public function members($room) {
         //TODO: DEMO CODE
         return array_map( array($this, '_member'), range(1, 10) );
     }
@@ -223,7 +223,7 @@ class WebIM_plugin extends CI_Model {
      * text
      * link
      */
-    function menu($uid) {
+    public function menu($uid) {
         return array();
     }
 
