@@ -1,7 +1,51 @@
 <?php
 
+/**
+ * WebIM-for-CodeIgniter
+ *
+ * @author      Ery Lee <ery.lee@gmail.com>
+ * @copyright   2014 NexTalk.IM
+ * @link        http://github.com/webim/webim-for-codeigniter
+ * @license     MIT LICENSE
+ * @version     5.4.1
+ * @package     WebIM
+ *
+ * MIT LICENSE
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/**
+ * WebIM Controller
+ *
+ * @package WebIM
+ * @autho Ery Lee
+ * @since 5.4.1
+ */
 
 class Webim extends CI_Controller {
+
+    /**
+     * current user
+     */
+    var $user = null;
 
 	public function __construct() {
 
@@ -11,11 +55,22 @@ class Webim extends CI_Controller {
 		$this->config->load('webim');
 		$IMC = $this->config->item('webim');
 
+		//is opened
+		if(! $IMC['isopen'] ) exit();
+
 		//load model
 		$this->load->model('WebIM_Model', '', TRUE);
 
         //load plugin
 		$this->load->model('WebIM_Plugin');
+
+        //load user
+        $user = $this->WebIM_Plugin-->user();
+        if($user == null &&  $IMC['visitor']) {
+            $user = $this->WebIM_Model->visitor();
+        }
+        if(!$user) exit("Login Required");
+        $this->user = $user;
 
 		//ticket
 		$ticket = $this->input->get_post('ticket');
@@ -23,18 +78,13 @@ class Webim extends CI_Controller {
 
 		//client
 		$this->load->library('WebIM_Client', array(
-			'endpoint'	=> $this->WebIM_Plugin->current_user(), 
+			'endpoint'	=> $user,
 			'domain'	=> $IMC['domain'],
 			'apikey'	=> $IMC['apikey'],
 			'server'	=> $IMC['server'],
 			'ticket'	=> $ticket ? $ticket : ''
 		));
 	}
-
-    private function current_uid() {
-        $user  = $this->WebIM_Plugin->current_user();
-        return $user['uid'];
-    }
 
 	/**
 	 * Webim介绍页面，正式版本可删除本页面
@@ -48,15 +98,13 @@ class Webim extends CI_Controller {
 	 */
 	public function boot() {
 		$IMC = $this->config->item('webim');
-		//插件关闭或用户未登录, 退出
-		if(! ($IMC['isopen'] and $this->WebIM_Plugin->logined()) ) exit();
 
         //FIX offline Bug
-        $user = $this->WebIM_Plugin->current_user();
-        $user['show'] = "unavailable";
+        $this->user->show = "unavailable";
+        $uid = $this->user->id;
 
         //Setting
-        $setting = $this->WebIM_Model->setting($user['id']);
+        $setting = $this->WebIM_Model->setting($uid);
 
 		$fields = array(
 			'version',
@@ -64,6 +112,7 @@ class Webim extends CI_Controller {
 			'local', 
 			'emot',
 			'opacity',
+            'discussion',
 			'enable_room', 
 			'enable_chatlink', 
 			'enable_shortcut',
@@ -74,20 +123,19 @@ class Webim extends CI_Controller {
 
 		$scriptVar = array(
             'version' => $IMC['version'],
-			'production_name' => 'ci',
+			'product' => 'ci',
 			'path' => $this->config->base_url(),
 			'is_login' => '1',
             'is_visitor' => false,
 			'login_options' => '',
-			'user' => $user,
+			'user' => $this->user,
 			//load setting
+            'jsonp' => false,
 			'setting' => $setting, 
 			'min' => $IMC['debug'] ? '' : '.min'
 		);
 
-		foreach($fields as $f) {
-			$scriptVar[$f] = $IMC[$f];	
-		}
+		foreach($fields as $f) { $scriptVar[$f] = $IMC[$f];	}
 
 		header("Content-type: application/javascript");
 		header("Cache-Control: no-cache");
@@ -96,12 +144,11 @@ class Webim extends CI_Controller {
 
 		$script = <<<EOF
 _IMC.script = window.webim ? '' : ('<link href="' + _IMC.path + 'static/webim' + _IMC.min + '.css?' + _IMC.version + '" media="all" type="text/css" rel="stylesheet"/><link href="' + _IMC.path + 'static/themes/' + _IMC.theme + '/jquery.ui.theme.css?' + _IMC.version + '" media="all" type="text/css" rel="stylesheet"/><script src="' + _IMC.path + 'static/webim' + _IMC.min + '.js?' + _IMC.version + '" type="text/javascript"></script><script src="' + _IMC.path + 'static/i18n/webim-' + _IMC.local + '.js?' + _IMC.version + '" type="text/javascript"></script>');
-_IMC.script += '<script src="' + _IMC.path + 'static/webim.' + _IMC.production_name + '.js?' + _IMC.version + '" type="text/javascript"></script>';
+_IMC.script += '<script src="' + _IMC.path + 'static/webim.' + _IMC.product + '.js?vsn=' + _IMC.version + '" type="text/javascript"></script>';
 document.write( _IMC.script );
 
 EOF;
 		exit($script);
-
 	}
 
 	/**
@@ -109,7 +156,7 @@ EOF;
 	 */
 	public function online() {
 		$IMC  = $this->config->item('webim');
-		$uid = $this->current_uid();
+		$uid = $this->user->id;
         $show = $this->input->post('show');
 
         //buddy, room, chatlink ids
@@ -119,18 +166,20 @@ EOF;
 		//active buddy who send a offline message.
 		$offlineMessages = $this->WebIM_Model->offline_histories($uid);
 		foreach($offlineMessages as $msg) {
-			if(!in_array($msg['from'], $activeBuddyIds)) {
-				$activeBuddyIds[] = $msg['from'];
+			if(!in_array($msg->from, $active_buddy_ids)) {
+				$active_buddy_ids[] = $msg->from;
 			}
 		}
         //buddies of uid
 		$buddies = $this->WebIM_Plugin->buddies($uid);
-        $buddyIds = array_map(function($buddy) { return $buddy['id']; }, $buddies);
+        $buddyIds = array_map(function($buddy) { return $buddy->id; }, $buddies);
         $buddyIdsWithoutInfo = array_filter( array_merge($chatlinkIds, $activeBuddyIds), function($id) use($buddyIds){ return !in_array($id, $buddyIds); } );
         //buddies by ids
 		$buddiesByIds = $this->WebIM_Plugin->buddies_by_ids($buddyIdsWithoutInfo);
         //all buddies
         $buddies = array_merge($buddies, $buddiesByIds);
+        $allBuddyIds = array();
+        foreach($buddies as $buddy) { $allBuddyIds[] = $buddy->id; }
 
         $rooms = array(); $roomIds = array();
 		if( $IMC['enable_room'] ) {
@@ -139,56 +188,55 @@ EOF;
             //temporary rooms
 			$temporaryRooms = $this->WebIM_Model->rooms($uid);
             $rooms = array_merge($persistRooms, $temporaryRooms);
-            $roomIds = array_map(function($room) { return $room['id']; }, $rooms);
+            $roomIds = array_map(function($room) { return $room->id; }, $rooms);
 		}
 
 		//===============Online===============
-		$data = $this->webim_client->online($buddyIds, $roomIds, $show);
+		$data = $this->client->online($allBuddyIds, $roomIds, $show);
 		if( $data->success ) {
             $rtBuddies = array();
             $presences = $data->presences;
             foreach($buddies as $buddy) {
-                $id = $buddy['id'];
+                $id = $buddy->id;
                 if( isset($presences->$id) ) {
-                    $buddy['presence'] = 'online';
-                    $buddy['show'] = $presences->$id;
+                    $buddy->presence = 'online';
+                    $buddy->show = $presences->$id;
                 } else {
-                    $buddy['presence'] = 'offline';
-                    $buddy['show'] = 'unavailable';
+                    $buddy->presence = 'offline';
+                    $buddy->show = 'unavailable';
                 }
                 $rtBuddies[$id] = $buddy;
             }
 			//histories for active buddies and rooms
 			foreach($activeBuddyIds as $id) {
                 if( isset($rtBuddies[$id]) ) {
-                    $rtBuddies[$id]['history'] = $this->WebIM_Model->histories($uid, $id, "chat" );
+                    $rtBuddies[$id]->history = $this->model->histories($uid, $id, "chat" );
                 }
 			}
             if( !$IMC['show_unavailable'] ) {
                 $rtBuddies = array_filter($rtBuddies, 
-                    function($buddy) { return $buddy['presence'] === 'online'; });        
+                    function($buddy) { return $buddy->presence === 'online'; });        
             }
             $rtRooms = array();
             if( $IMC['enable_room'] ) {
                 foreach($rooms as $room) {
-                    $rtRooms[$room['id']] = $room;
+                    $rtRooms[$room->id] = $room;
                 }
                 foreach($activeRoomIds as $id){
                     if( isset($rtRooms[$id]) ) {
-                        $rtRooms[$id]['history'] = $this->WebIM_Model->histories($uid, $id, "grpchat" );
+                        $rtRooms[$id]->history = $this->model->histories($uid, $id, "grpchat" );
                     }
                 }
             }
 
 			$this->WebIM_Model->offline_readed($uid);
 
-            $user = $this->WebIM_Plugin->current_user();
-            if($show) $user['show'] = $show;
+            if($show) $this->user->show = $show;
 
             $this->_json_return(array(
                 'success' => true,
                 'connection' => $data->connection,
-                'user' => $user,
+                'user' => $this->user,
                 'buddies' => array_values($rtBuddies),
                 'rooms' => array_values($rtRooms),
                 'new_messages' => $offlineMessages,
@@ -222,13 +270,13 @@ EOF;
 	 * Webim读取好友列表接口
 	 */
 	public function buddies() {
+        $uid = $this->user->id;
 		$ids = $this->input->get('ids');
-		$buddies = $this->WebIM_Plugin->buddies_by_ids($ids);
+		$buddies = $this->WebIM_Plugin->buddies_by_ids($uid, $ids);
 		$this->_json_return($buddies);
 	}
 
 	public function message() {
-        $user = $this->WebIM_Plugin->current_user();
 		$type = $this->input->post("type");
 		$offline = $this->input->post("offline");
 		$to = $this->input->post("to");
@@ -241,8 +289,8 @@ EOF;
 				"send" => $send,
 				"type" => $type,
 				"to" => $to,
-                'from' => $user['id'],
-                'nick' => $user['nick'],
+                'from' => $this->user->id,
+                'nick' => $this->user->nick,
 				"body" => $body,
 				"style" => $style,
 				"timestamp" => $timestamp,
@@ -269,18 +317,28 @@ EOF;
 	}
 
 	public function history() {
-		$uid = $this->current_uid();
+		$uid = $this->user->id;
 		$with = $this->input->get('id');
 		$type = $this->input->get('type');
 		$histories = $this->WebIM_Model->histories($uid, $with, $type);
 		$this->_json_return($histories);
+	}
+
+	/**
+	 * 清空历史记录
+	 */
+	public function clear_history() {
+        $uid = $this->user->id;
+		$id = $this->input->post('id');
+		$this->WebIM_Model->clear_histories($uid, $id);
+		$this->_ok_return();
 	}
     
 	/**
 	 * 下载历史记录
 	 */
 	public function download_history() {
-		$uid = $this->current_uid();
+		$uid = $this->user->id;
 		$id = $this->input->get('id');
 		$type = $this->input->get('type');
 		$histories = $this->WebIM_Model->histories($uid, $id, $type, 1000 );
@@ -296,40 +354,34 @@ EOF;
 		echo "<h1>Histories($date)</h1>".PHP_EOL;
 		echo "<table><thead><tr><td>用户</td><td>消息</td><td>时间</td></tr></thead><tbody>";
 		foreach($histories as $history) {
-			$nick = $history['nick'];
-			$body = $history['body'];
-			$style = $history['style'];
-			$time = date( 'm-d H:i', (float)$history['timestamp']/1000 ); 
-			echo "<tr><td>{$nick}</td><td style=\"{$style}\">{$body}</td><td>{$time}</td></tr>";
+			$nick = $history->nick;
+			$body = $history->body;
+			$style = $history->style;
+			$time = date( 'm-d H:i', (float)$history->timestamp/1000 ); 
+			echo "<tr><td>{$nick}:</td><td style=\"{$style}\">{$body}</td><td>{$time}</td></tr>";
 		}
 		echo "</tbody></table>";
 		echo "</body></html>";
 	}
 
-	/**
-	 * 清空历史记录
-	 */
-	public function clear_history() {
-		$id = $this->input->post('id');
-		$this->WebIM_Model->clear_histories($this->current_uid(), $id);
-		$this->_ok_return();
-	}
 
 	/**
 	 * Webim读取群组接口
 	 */
 	public function rooms() {
+        $uid = $this->user->id;
 		$ids = $this->input->get("ids");
-		$rooms = $this->WebIM_Plugin->rooms_by_ids($ids);
-		$this->_json_return($rooms);	
+		$persist_rooms = $this->WebIM_Plugin->rooms_by_ids($uid, $ids);
+        $temporary_rooms = $this->WebIM_Model->rooms_by_ids($uid, $ids);
+        $rooms = array_merge($persist_rooms, $temporary_rooms);
+		$this->_json_return($rooms);
 	}
 
     /**
      * Invite Room
      */
     public function invite() {
-        $uid = $this->current_uid();
-        $user = $this->WebIM_Plugin->current_user();
+        $uid = $this->user->id;
         $roomId = $this->input->post('id');
         $nick = $this->input->post('nick');
         if(strlen($nick) === 0) {
@@ -337,12 +389,17 @@ EOF;
 			exit("Nick is Null");
         }
         //find persist room 
-        $room = $this->_find_room($this->WebIM_Plugin, $roomId);
+        $room = $this->_find_room($this->WebIM_Model, $roomId);
         if(!$room) {
-            $room = $this->_find_room($this->WebIM_Model, $data);
+            //create temporary room
+            $room = $this->WebIM_Model->create_room(array(
+                'owner' => $uid,
+                'name' => $roomId, 
+                'nick' => $nick
+            ));
         }
         //join the room
-        $this->WebIM_Model->join_room($roomId, $uid, $user['nick']);
+        $this->WebIM_Model->join_room($roomId, $uid, $this->user->nick);
         //invite members
         $members = explode(",", $this->input->post('members'));
         $members = $this->WebIM_Plugin->buddies_by_ids($members);
@@ -350,21 +407,20 @@ EOF;
         //send invite message to members
         foreach($members as $m) {
             $body = "webim-event:invite|,|{$roomId}|,|{$nick}";
-            $this->webim_client->message(null, $m['id'], $body); 
+            $this->client->message(null, $m->id, $body); 
         }
         //tell server that I joined
         $this->webim_client->join($roomId);
         $this->_json_return(array(
-            'id' => $room['name'],
-            'nick' => $room['nick'],
+            'id' => $room->name,
+            'nick' => $room->nick,
             'temporary' => true,
             'pic_url' => $this->_webim_image('room.png')
         ));
     }
 
 	public function join() {
-        $uid = $this->current_uid();
-        $user  = $this->WebIM_Plugin->current_user();
+        $uid = $this->user->uid;
         $roomId = $this->input->post('id');
         $nick = $this->input->post('nick');
         $room = $this->_find_room($this->WebIM_Plugin, $roomId);
@@ -375,24 +431,28 @@ EOF;
 			header("HTTP/1.0 404 Not Found");
 			exit("Can't found room: {$roomId}");
         }
+        $this->WebIM_Model->join_room($roomId, $uid, $this->user->nick);
         $this->webim_client->join($roomId);
         $this->_json_return(array(
             'id' => $roomId,
-            'nick' => $room['nick'],
-            'temporary' => false,
+            'nick' => $nick,
+            'temporary' => true,
             'pic_url' => $this->_webim_image('room.png')
         ));
 	}
 
+    /**
+     * Leave room
+     */
 	public function leave() {
-        $uid = $this->current_uid();
+        $uid = $this->user->id;
 		$room = $this->input->post('id');
-		$this->webim_client->leave( $room );
+		$this->webim_client->leave( $room, $uid);
 		$this->_ok_return();
 	}
 
 	public function members() {
-        $user = $this->WebIM_Plugin->current_user();
+        $members = array();
         $id = $this->input->get('id');
         $room = $this->_find_room($this->WebIM_Plugin, $id);
         if($room) {
@@ -406,35 +466,33 @@ EOF;
         if(!$room) {
 			header("HTTP/1.0 404 Not Found");
 			exit("Can't found room: {$id}");
-            return;
         }
         $presences = $this->webim_client->members($id);
         $rtMembers = array();
         foreach($members as $m) {
-            $id = $m['id'];
+            $id = $m->id;
             if(isset($presences->$id)) {
-                $m['presence'] = 'online';
-                $m['show'] = $presences->$id;
+                $m->presence = 'online';
+                $m->show = $presences->$id;
             } else {
-                $m['presence'] = 'offline';
-                $m['show'] = 'unavailable';
+                $m->presence = 'offline';
+                $m->show = 'unavailable';
             }
             $rtMembers[] = $m;
         }
         usort($rtMembers, function($m1, $m2) {
-            if($m1['presence'] === $m2['presence']) return 0;
-            if($m1['presence'] === 'online') return 1;
+            if($m1->presence === $m2->presence) return 0;
+            if($m1->presence === 'online') return 1;
             return -1;
         });
         $this->_json_return($rtMembers);
 	}
-	
 
     /**
      * Block room
      */
     public function block() {
-        $uid = $this->current_uid();
+        $uid = $this->user->id;
         $room = $this->input->post('id');
         $this->WebIM_Model->block($room, $uid);
         $this->_ok_return();
@@ -444,7 +502,7 @@ EOF;
      * Unblock Room
      */
     public function unblock() {
-        $uid = $this->current_uid();
+        $uid = $this->user->id;
         $room = $this->input->post('id');
         $this->WebIM_Model->unblock($room, $uid);
         $this->_ok_return();
@@ -454,7 +512,7 @@ EOF;
      * Read Notifications
      */
 	public function notifications() {
-        $uid = $this->current_uid();
+        $uid = $this->user->id;
 		$this->_json_return(
 			$this->WebIM_Plugin->notifications($uid));
 	}
@@ -463,14 +521,13 @@ EOF;
      * Setting
      */
 	public function setting() {
-		$uid = $this->current_uid();
 		$data = $this->input->post('data');
-		$this->WebIM_Model->setting($uid, $data);
+		$this->WebIM_Model->setting($this->user->id, $data);
 		$this->_ok_return();
 	}
 
     private function _find_room($obj, $id) {
-        $rooms = $obj->rooms_by_ids(array($id));
+        $rooms = $obj->rooms_by_ids($this->user->id, array($id));
         if($rooms && isset($rooms[0])) return $rooms[0];
         return null;
     }
