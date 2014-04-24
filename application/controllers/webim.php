@@ -172,8 +172,13 @@ EOF;
 		}
         //buddies of uid
 		$buddies = $this->WebIM_Plugin->buddies($uid);
-        $buddyIds = array_map(function($buddy) { return $buddy->id; }, $buddies);
-        $buddyIdsWithoutInfo = array_filter( array_merge($chatlinkIds, $activeBuddyIds), function($id) use($buddyIds){ return !in_array($id, $buddyIds); } );
+        $buddyIds = array_map(array($this, '_buddy_id'), $buddies);
+        $buddyIdsWithoutInfo = array();
+        foreach(array_merge($chatlinkIds, $activeBuddyIds) as $id) {
+            if( !in_array($id, $buddyIds) ) {
+                $buddyIdsWithoutInfo[] = $id;
+            }
+        }
         //buddies by ids
 		$buddiesByIds = $this->WebIM_Plugin->buddies_by_ids($buddyIdsWithoutInfo);
         //all buddies
@@ -188,7 +193,7 @@ EOF;
             //temporary rooms
 			$temporaryRooms = $this->WebIM_Model->rooms($uid);
             $rooms = array_merge($persistRooms, $temporaryRooms);
-            $roomIds = array_map(function($room) { return $room->id; }, $rooms);
+            $roomIds = array_map(array($this, '_room_id'), $rooms);
 		}
 
 		//===============Online===============
@@ -214,8 +219,11 @@ EOF;
                 }
 			}
             if( !$IMC['show_unavailable'] ) {
-                $rtBuddies = array_filter($rtBuddies, 
-                    function($buddy) { return $buddy->presence === 'online'; });        
+                $olBuddies = array();
+                foreach($rtBuddies as $buddy) {
+                    if($buddy->presence === 'online') $olBuddies[] = $buddy;
+                }
+                $rtBuddies = $olBuddies;
             }
             $rtRooms = array();
             if( $IMC['enable_room'] ) {
@@ -548,6 +556,14 @@ EOF;
 	private function _ids_array( $ids ){
 		return ($ids===NULL || $ids==="") ? array() : (is_array($ids) ? array_unique($ids) : array_unique(explode(",", $ids)));
 	}
+
+    private function _room_id($room) {
+        return $room->id;
+    }
+
+    private function _buddy_id($buddy) {
+        return $buddy->id;
+    }
 
 }
 

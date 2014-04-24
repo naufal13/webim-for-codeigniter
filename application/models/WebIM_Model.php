@@ -147,8 +147,8 @@ class WebIM_Model extends CI_Model {
      */
     public function rooms_by_ids($uid, $ids) {
         if($ids === '' || empty($ids)) return array();
-        $ids = implode(',', array_map(function($id) {return "'$id'";}, $ids));
-        $sql = "SELECT * from {$this->_table('rooms')} where name in ({$ids})";
+        $ids = implode("','",  $ids);
+        $sql = "SELECT * from {$this->_table('rooms')} where name in ('{$ids}')";
         $query = $this->db->query($sql);
         return $query->result();
     }
