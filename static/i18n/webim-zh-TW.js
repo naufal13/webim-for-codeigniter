@@ -28,6 +28,7 @@ webim.ui.i18n.store('zh-TW',{
 	"close":"\u95dc\u9589",
 	"minimize":"\u6700\u5c0f\u5316",
 	"maximize":"\u6700\u5927\u5316",
+    "detach": "\u79fb\u52d5",
 	"restore":"\u9084\u539f",
 	"setting":"\u8a2d\u7f6e",
 	"notification":"\u901a\u77e5",

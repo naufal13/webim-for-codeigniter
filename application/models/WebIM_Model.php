@@ -133,7 +133,7 @@ class WebIM_Model extends CI_Model {
                 'id' => $row->name,
                 'nick' => $row->nick,
                 "url" => "#", //TODO
-                "pic_url" => $this->_image('room.png'),//TODO
+                "avatar" => $this->_image('room.png'),//TODO
                 "status" => '',
                 "temporary" => true,
                 "blocked" => $this->is_room_blocked($row->name, $uid)
@@ -263,7 +263,7 @@ class WebIM_Model extends CI_Model {
             'group' => "visitor",
             'presence' => 'online',
             'show' => "available",
-            'pic_url' => $this->_image('male.png'),
+            'avatar' => $this->_image('male.png'),
             'role' => 'visitor',
             'url' => "#",
             'status' => "",
@@ -287,7 +287,7 @@ class WebIM_Model extends CI_Model {
                 "nick" => "v".substr($v->name, 4), //remove vid:
                 "group" => "visitor",
                 "url" => "#",
-                "pic_url" => $this->_image('male.png'),
+                "avatar" => $this->_image('male.png'),
                 "status" => $status, 
             );
         }

@@ -244,6 +244,7 @@ EOF;
             $this->_json_return(array(
                 'success' => true,
                 'connection' => $data->connection,
+                'presences' => $data->presences,
                 'user' => $this->user,
                 'buddies' => array_values($rtBuddies),
                 'rooms' => array_values($rtRooms),
@@ -423,7 +424,7 @@ EOF;
             'id' => $room->name,
             'nick' => $room->nick,
             'temporary' => true,
-            'pic_url' => $this->_webim_image('room.png')
+            'avatar' => $this->_webim_image('room.png')
         ));
     }
 
@@ -445,7 +446,7 @@ EOF;
             'id' => $roomId,
             'nick' => $nick,
             'temporary' => true,
-            'pic_url' => $this->_webim_image('room.png')
+            'avatar' => $this->_webim_image('room.png')
         ));
 	}
 

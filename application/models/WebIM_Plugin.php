@@ -55,7 +55,7 @@ class WebIM_plugin extends CI_Model {
             'nick' => preg_replace('/uid/', 'user', $uid),
             'presence' => 'online',
             'show' => "available",
-            'pic_url' => $this->_image('male.png'),
+            'avatar' => $this->_image('male.png'),
             'url' => "#",
             'role' => 'user',
             'status' => "",
@@ -75,7 +75,7 @@ class WebIM_plugin extends CI_Model {
 	 * 	id:         uid
 	 * 	uid:        uid
 	 *	nick:       nick
-	 *	pic_url:    url of photo
+	 *	avatar:     url of photo
      *	presence:   online | offline
 	 *	show:       available | unavailable | away | busy | hidden
 	 *  url:        url of home page of buddy 
@@ -112,7 +112,7 @@ class WebIM_plugin extends CI_Model {
             'presence' => 'offline',
             'show' => 'unavailable',
             'status' => '#',
-            'pic_url' => $this->_image('male.png')
+            'avatar' => $this->_image('male.png')
         );
     }
 
@@ -128,7 +128,7 @@ class WebIM_plugin extends CI_Model {
 	 *	id:		    Room ID,
 	 *	nick:	    Room Nick
 	 *	url:	    Home page of room
-	 *	pic_url:    Pic of Room
+	 *	avatar:    Pic of Room
 	 *	status:     Room status 
 	 *	count:      count of online members
 	 *	all_count:  count of all members
@@ -141,7 +141,7 @@ class WebIM_plugin extends CI_Model {
             'name' => 'room1',
 			'nick' => 'Room',
 			'url' => "#",
-			'pic_url' => $this->_image('room.png'),
+			'avatar' => $this->_image('room.png'),
 			'status' => "Room",
 			'blocked' => false,
             'temporary' => false
@@ -169,7 +169,7 @@ class WebIM_plugin extends CI_Model {
                     'name' => $id,
                     'nick' => 'room'.$id,
                     'url' => "#",
-                    'pic_url' => $this->_image('room.png')
+                    'avatar' => $this->_image('room.png')
                 );
             }
         }
