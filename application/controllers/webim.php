@@ -281,6 +281,7 @@ EOF;
 	public function buddies() {
         $uid = $this->user->id;
 		$ids = $this->input->get('ids');
+        $ids = explode(',', $ids);
 		$buddies = $this->WebIM_Plugin->buddies_by_ids($uid, $ids);
         $buddyIds = array_map(array($this, '_buddy_id'), $buddies);
         $presences = $this->webim_client->presences($buddyIds);
