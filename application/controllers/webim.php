@@ -282,6 +282,18 @@ EOF;
         $uid = $this->user->id;
 		$ids = $this->input->get('ids');
 		$buddies = $this->WebIM_Plugin->buddies_by_ids($uid, $ids);
+        $buddyIds = array_map(array($this, '_buddy_id'), $buddies);
+        $presences = $this->client->presences($buddyIds);
+        foreach($buddies as $buddy) {
+            $id = $buddy->id;
+            if( isset($presences->$id) ) {
+                $buddy->presence = 'online';
+                $buddy->show = $presences->$id;
+            } else {
+                $buddy->presence = 'offline';
+                $buddy->show = 'unavailable';
+            }
+        }
 		$this->_json_return($buddies);
 	}
 
