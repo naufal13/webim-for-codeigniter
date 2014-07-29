@@ -283,7 +283,7 @@ EOF;
 		$ids = $this->input->get('ids');
 		$buddies = $this->WebIM_Plugin->buddies_by_ids($uid, $ids);
         $buddyIds = array_map(array($this, '_buddy_id'), $buddies);
-        $presences = $this->client->presences($buddyIds);
+        $presences = $this->webim_client->presences($buddyIds);
         foreach($buddies as $buddy) {
             $id = $buddy->id;
             if( isset($presences->$id) ) {
