@@ -203,7 +203,8 @@ EOF;
             $presences = $data->presences;
             foreach($buddies as $buddy) {
                 $id = $buddy->id;
-                if( isset($presences->$id) ) {
+                //fix invisible problem
+                if( isset($presences->$id) && $presences->$id != "invisible" ) {
                     $buddy->presence = 'online';
                     $buddy->show = $presences->$id;
                 } else {
@@ -493,7 +494,8 @@ EOF;
         $rtMembers = array();
         foreach($members as $m) {
             $id = $m->id;
-            if(isset($presences->$id)) {
+            //fix invisible problem
+            if( isset($presences->$id) && $presences->$id != "invisible" ) {
                 $m->presence = 'online';
                 $m->show = $presences->$id;
             } else {
