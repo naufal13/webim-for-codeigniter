@@ -5,8 +5,8 @@
  * Copyright (c) 2014 Arron
  * Released under the MIT, BSD, and GPL Licenses.
  *
- * Date: Fri Jul 11 11:40:50 2014 +0800
- * Commit: d4ca621cc222183abececea056397b561944979b
+ * Date: Wed Sep 10 17:30:04 2014 +0800
+ * Commit: 5a22f8d1fa4a33ab8b17c7bcaccc4583377c71b6
  */
 (function(window, document, undefined){
 
@@ -2299,8 +2299,8 @@ model("history", {
  * Copyright (c) 2013 Arron
  * Released under the MIT, BSD, and GPL Licenses.
  *
- * Date: Fri Jul 18 11:03:56 2014 +0800
- * Commit: 0b20cb1bd0a889b343c46259a69f53f7d652dbc9
+ * Date: Sun Oct 12 10:22:21 2014 +0800
+ * Commit: 1f9a91e0ee210d2c01193691041513c7ddb84beb
  */
 (function(window,document,undefined){
 
@@ -6625,7 +6625,7 @@ widget("chatbtn",
 			if(id && children(el).length == 0 && text && (elementId || className.test(el.className))){
 				anthors[id] ? anthors[id].push(el) :(anthors[id] = [el]);
 				list[id] = {id: id, name: text};
-				var icon = createElement('<i class="webim-chaticon"><em>');;
+				var icon = createElement('<i class="webim-chaticon"><em></em></i>');
 				el.appendChild( icon );
 				el.icon = icon;
 				el.title = i18n("offline");

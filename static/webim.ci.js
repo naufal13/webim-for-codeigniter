@@ -2,6 +2,7 @@
 (function(webim) {
 	var path = _IMC.path;
 	webim.extend(webim.setting.defaults.data, _IMC.setting);
+	if(_IMC.csrf_token) webim.csrf_token = _IMC.csrf_token;
     var cookie_key = "_webim_cookie_";
 	if( _IMC.is_visitor ) { cookie_key = "_webim_v_cookie_"; }
     if( _IMC.user != "" ) { cookie_key = cookie_key + _IMC.user.id; }

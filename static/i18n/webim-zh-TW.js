@@ -109,6 +109,7 @@ webim.ui.i18n.store('zh-TW',{
 	"cancel": "\u53d6\u6d88",
 	"invite": "\u9080\u8bf7",
 	"visitor":"\u8a2a\u5ba2",
+	"robot": "\u6a5f\u5668\u4eba",
 	"manager":"\u7ba1\u7406\u54e1",
 	"exit": "\u9000\u51fa",
     "Exit Room": "\u78ba\u5b9a\u8981\u9000\u51fa'{{name}}'\u8a0e\u8ad6\u7d44\u55ce?",
