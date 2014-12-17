@@ -5,8 +5,8 @@
  * Copyright (c) 2014 Arron
  * Released under the MIT, BSD, and GPL Licenses.
  *
- * Date: Wed Sep 10 17:30:04 2014 +0800
- * Commit: 5a22f8d1fa4a33ab8b17c7bcaccc4583377c71b6
+ * Date: Wed Dec 17 00:27:22 2014 +0800
+ * Commit: 0233da81724642bededc77a372983c416c7b6692
  */
 (function(window, document, undefined){
 
@@ -1275,6 +1275,14 @@ function log() {
 
 }
 
+/**
+ * Detect mobile code from http://detectmobilebrowsers.com/
+ */
+function isMobile() {
+	return (function(a){return /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4));})(navigator.userAgent||navigator.vendor||window.opera);
+}
+
+
 function webim( element, options ) {
 	this.options = extend( {}, webim.defaults, options );
 	this._init( element, options );
@@ -1292,7 +1300,7 @@ extend(webim.prototype, {
 	_init: function() {
 		var self = this, options = self.options;
 		//Default user status info.
-		self.data = { 
+		self.data = {
 			user: {
 				presence: 'offline', 
 				show: 'unavailable'
@@ -1303,7 +1311,7 @@ extend(webim.prototype, {
 
 		ajax.settings.dataType = options.jsonp ? "jsonp" : "json";
 
-		self.status = new webim.status();
+		self.status = new webim.status(null, options);
 		self.setting = new webim.setting();
         self.models['presence'] = new webim.presence();
 		self.buddy = new webim.buddy();
@@ -1671,7 +1679,8 @@ extend( webim, {
 	socket: socket,
 	model: model,
 	route: route,
-	ClassEvent: ClassEvent
+	ClassEvent: ClassEvent,
+	isMobile: isMobile
 } );
 /*
 * 配置(数据库永久存储)
@@ -1742,11 +1751,13 @@ model("setting",{
 //}
 
 model( "status", {
-	key:"_webim"
+	key:"_webim",
+    storage: "local",
+    domain: document.domain
 }, {
 	_init:function() {
 		var self = this, data = self.data, key = self.options.key;
-		var store = window.localStorage;
+		var store = (self.options.storage == "local") && window.localStorage;
 		if( store ) {
 			//无痕浏览模式
 			try {
@@ -1786,12 +1797,12 @@ model( "status", {
 		this._save( {} );
 	},
 	_save: function( data ) {
-		var self = this, key = self.options.key;
+		var self = this, key = self.options.key, domain = self.options.domain;
 		self.data = data;
 		data = JSON.stringify( data );
 		self.store ? self.store.setItem( key, data ) : cookie( key, data, {
 			path: '/',
-			domain: document.domain
+			domain: domain
 		} );
 	}
 } );
@@ -1898,6 +1909,22 @@ model( "buddy", {
 				success: self.set
 			} );
 		}
+	},
+	search: function( val, callback ) {
+		var self = this, options = self.options;
+		//5.8 remove seach
+		function succ(data) {
+			self.set(data);
+			setTimeout(callback, 500);
+		}
+		ajax( {
+			type: "post",
+			url: route( "search" ),
+			cache: false,
+			data:{ nick: val, csrf_token: webim.csrf_token },
+			context: self,
+			success: succ
+		} );
 	},
 	set: function( addData ) {
 		var self = this, data = self.data, dataHash = self.dataHash, status = {};
@@ -2299,8 +2326,8 @@ model("history", {
  * Copyright (c) 2013 Arron
  * Released under the MIT, BSD, and GPL Licenses.
  *
- * Date: Sun Oct 12 10:22:21 2014 +0800
- * Commit: 1f9a91e0ee210d2c01193691041513c7ddb84beb
+ * Date: Thu Dec 18 00:25:30 2014 +0800
+ * Commit: 28ab044bb049e4f0415dcc1278e7e9efacb8b8a1
  */
 (function(window,document,undefined){
 
@@ -2912,6 +2939,32 @@ i18n.store = function(locale, data){
  *
  */
 
+/*----------------------------------------
+ Windows size
+----------------------------------------*/
+function winSize() {
+	var w = window,
+    d = document,
+    e = d.documentElement,
+    g = d.getElementsByTagName('body')[0],
+    x = w.innerWidth || e.clientWidth || g.clientWidth,
+    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+	return {x: x, y: y};
+}
+
+/**
+ * open chatbox in another window
+ */
+function openChatbox(url, height, width) {
+	height = height || 600;
+	width = width || 400;
+	window.open(url, "_blank","height="+height+",width="+width+",fullscreen=3,top=40,left=40,status=no,toolbar=no,menubar=no,resizable=no,scrollbars=no,location=no,titlebar=no,fullscreen=no");
+}
+
+/*----------------------------------------
+ Webim UI
+----------------------------------------*/
+
 function webimUI(element, options){
 	var self = this;
 	self.element = element;
@@ -3086,6 +3139,7 @@ extend(webimUI,{
 	date: date,
 	ready: ready,
 	createElement: createElement,
+	openChatbox: openChatbox,
 	defaults: {},
 	apps:{}
 });
@@ -3171,7 +3225,7 @@ widget("window", {
 	html: function(obj){
 		html( this.$.content, obj );
 	},
-	subHeader: function(obj){
+	subHeader: function(obj) {
 		html( this.$.subHeader, obj );
 	},
 	_init: function(element, options){
@@ -3189,9 +3243,9 @@ widget("window", {
 		       	hide($.tabClose);
 		       	hide($.close);
 		}
-		if(options.isMinimize){
+		if(options.isMinimize) {
 			self.minimize();
-		}else{
+        }else{
 			self.restore();
 		}
         self.position = {right: 0, bottom: 0};
@@ -3263,7 +3317,7 @@ widget("window", {
 		if(!self.options.sticky) self.minimize();
 		self.trigger("deactivate");
 	},
-	_setVisibile: function(){
+	_setVisibile: function() {
 		var self = this, $ = self.$;
         if(self.isDetached()) { 
             hide($.tab); 
@@ -3273,18 +3327,33 @@ widget("window", {
 		self.activate();
 		_countDisplay($.tabCount, 0);
 	},
-	maximize: function(){
-		var self = this;
-		if(self.isMaximize())return;
+	maximize: function() {
+		var self = this, win = self.$.window;
+		//TODO: 5.8 max window, is this ok? 
+		if(self.isMaximize()) {
+			//TODO: NORMAL, fixme
+			window.onresize = null;
+			removeClass(win, "webim-maximized-window");
+			self._changeState("restore");
+			return;
+		}
+		addClass(win, "webim-maximized-window");
 		self._setVisibile();
 		self._changeState("maximize");
+		window.onresize = function() {
+			self._changeState("maximize");
+		};
 	},
+
 	restore: function(){
-		var self = this;
-		if(hasClass(self.element, "webim-window-normal"))return;
+		var self = this, win = self.$.window;
+		if(hasClass(self.element, "webim-window-normal")) return;
+        //5.8 max window...
+        if(hasClass(win, "webim-maximized-window")) { self.maximize(); return; }
 		self._setVisibile();
 		self._changeState("restore");
 	},
+
 	minimize: function(){
 		var self = this;
 		if(self.isMinimize())return;
@@ -4125,15 +4194,17 @@ widget("layout",{
 	addChat: function(type, id, chatOptions, winOptions, nick){
 		type = _tr_type(type);
 		var self = this;
-		if(self.chat(type, id))return;
-
 		var  panels 	= self.panels;
 		var panelId = _id_with_type(type, id);
+        
+        //5.8 return win;
+		if(self.chat(type, id)) { return self.tabs[panelId]; }
 
 		var win = self.tabs[panelId] = new webimUI.window(null, extend({
 			isMinimize: self.activeTabId || !self.options.chatAutoPop,
 			tabWidth: self.tabWidth -2,
             detachable: self.options.detachable || false,
+			maximizable: self.options.maximizable || false,
 			titleVisibleLength: 9
 		}, winOptions))
 			.bind("close", function(){ 
@@ -4156,6 +4227,7 @@ widget("layout",{
 		!win.isMinimize() && self._changeActive(panelId);
 		self._fitUI();
 		//else self.focusChat(panelId);
+        return win;
 	},
 	removeChat: function(type, id){
 		//ids = idsArray(ids);
@@ -4642,7 +4714,7 @@ app( "chat", function( options ) {
 	return chatUI;
 } );
 
-widget("chat",{
+widget("chat", {
 	tpl_header: '<div><div id=":user" class="webim-user"> \
 	<a id=":userPic" class="webim-user-pic ui-corner-all ui-state-active" href="#id"><img width="50" height="50" src="" defaultsrc="" onerror="var d=this.getAttribute(\'defaultsrc\');if(d && this.src!=d)this.src=d;" class="ui-corner-all"></a> \
 	<span id=":userStatus" title="" class="webim-user-status">&nbsp;</span> \
@@ -4667,7 +4739,7 @@ widget("chat",{
 	</div> \
 	</div>'
 },{
-	_init: function(){
+	_init: function() {
 		var self = this, element = self.element, options = self.options, win = options.window;
 		var history = self.history = new webimUI.history(null,{
 			user: options.user,
@@ -4757,15 +4829,43 @@ widget("chat",{
 		if( main.scrollTop != main.scrollHeight)
 			main.scrollTop = main.scrollHeight;
 	},
-	_fitUI: function(e){
+
+	_fitUI: function(e) {
 		var self = this, win = self.window, $ = self.$;
 		self._adjustContent();
-
 	},
-	_bindWindow: function(){
-		var self = this, win = self.window;
-		win.bind("displayStateChange", function(e, type){
-			if(type != "minimize"){
+
+	_bindWindow: function() {
+
+		var self = this, options = self.options, win = self.window, $ = self.$, content = $.content, main = $.main;
+		
+		win.bind("displayStateChange", function(e, type) {
+
+			//TODO: 5.8 max window
+			if(type == "maximize") {
+				//TODO: FIXME Later... compute when init...
+				var sz = winSize(), height = (sz.y - 128);
+				content.style.height = main.style.height = height + "px";
+				//TODO: should be moved to 'member' plugin... 
+				if(options.member) {
+					var sidebar = $.sidebar.firstChild;
+					sidebar.style.marginTop = "0px";
+					sidebar.style.height = (height - 1) + "px";
+					sidebar.style.left = "-1px";
+					main.style.marginLeft = "8.2em"; //TODO: fix later...
+				}
+			} else if(type == "restore") {
+				content.style.height = main.style.height = "";
+				if(options.member) {
+					//TODO: should be moved to 'member' plugin... 
+					var sidebar = $.sidebar.firstChild;
+					sidebar.style.marginTop = "";
+					sidebar.style.height = "";
+					sidebar.style.left = "";
+					main.style.marginLeft = "0px";
+				}
+			}
+			if(type != "minimize") {
 				//fix firefox
 				window.setTimeout(function(){self.$.input.focus();},0);
 				//self.$.input.focus();
@@ -5178,7 +5278,7 @@ widget("setting",{
 		//this._initEvents();
 		var copyright = this.options.copyright;	
 		if( copyright ) {
-			copyright = copyright === true ? '<p style="margin: 5px 10px;"><a class="webim-gray" href="http://nextalk.im/" target="_blank">Powered by <strong>NexTalk</strong><em>&nbsp5.5</em></a></p>' : copyright;
+			copyright = copyright === true ? '<p style="margin: 5px 10px;"><a class="webim-gray" href="http://nextalk.im/" target="_blank">Powered by <strong>NexTalk</strong><em>&nbsp5.8</em></a></p>' : copyright;
 			this.element.appendChild(createElement(copyright));
 		}
 	},
@@ -5514,6 +5614,11 @@ app("buddy", function( options ){
 		}
 	});
 
+	//5.8
+	buddyUI.bind("search", function(e, val, callback) {
+		im.buddy.search(val, callback);
+	});
+
 	var mapId = function(a){ return isObject(a) ? a.id : a };
 	var grepVisible = function(a){ return a.show != "invisible" && a.presence == "online"};
 	var grepInvisible = function(a){ return a.show == "invisible"; };
@@ -5559,7 +5664,7 @@ app("buddy", function( options ){
 	buddyUI.offline();
 	im.bind( "beforeOnline", function(){
 		buddyUI.online();
-	}).bind("online", function() {
+	}).bind( "online", function() {
 		userUI && buddyUI.window.subHeader( userUI.element );
 		buddyUI.titleCount();
 	}).bind( "offline", function( type, msg ) {
@@ -5570,7 +5675,7 @@ app("buddy", function( options ){
 	return buddyUI;
 });
 
-widget("buddy",{
+widget("buddy", {
 	template: '<div id="webim-buddy" class="webim-buddy webim-flex webim-box">\
 		<div id=":search" class="webim-buddy-search ui-state-default ui-corner-all"><em class="ui-icon ui-icon-search"></em><input id=":searchInput" type="text" value="" /></div>\
 			<div class="webim-buddy-content webim-flex" id=":content">\
@@ -5607,7 +5712,7 @@ widget("buddy",{
 
 	},
 	_initEvents: function(){
-		var self = this, $ = self.$, search = $.search, input = $.searchInput, placeholder = i18n("search buddy"), activeClass = "ui-state-active";
+		var self = this, $ = self.$, options = self.options, search = $.search, input = $.searchInput, placeholder = i18n("search buddy"), activeClass = "ui-state-active";
 		addEvent(search.firstChild, "click",function(){
 			input.focus();
 		});
@@ -5620,28 +5725,44 @@ widget("buddy",{
 			removeClass(search, activeClass);
 			if(this.value == "")this.value = placeholder;
 		});
-		addEvent(input, "keyup", function(){
+
+
+
+		//5.8 vsn: remote search
+		addEvent(input, "keyup", function(e) {
+			
+			function localSearch() {
+				//hide all first
+				each(self.groups, function(n, grp) { hide(grp.el) });      
+				each(self.on_li, function(n,li) { hide(li); });
+				each(self.li, function(n,li) { hide(li); });
+				//show searched
+				each(self.li, function(id, li){
+					 if ( (li.text || li.innerHTML.replace(/<[^>]*>/g, "")).indexOf(val) >= 0 ) {
+						 var grp = self.li_group[id];
+						 if(grp) show(grp.el);
+						 show(li);
+					 }
+				});
+			}
+
 			var val = this.value;
-            if(val == undefined || val == "") {
-                //show all when finished
-                each(self.groups, function(n, grp) { show(grp.el) });
-                each(self.on_li, function(n,li) { show(li); });
-                each(self.li, function(n,li) { show(li); });
-            } else {
-                //hide all first
-                each(self.groups, function(n, grp) { hide(grp.el) });      
-                each(self.on_li, function(n,li) { hide(li); });
-                each(self.li, function(n,li) { hide(li); });
-                //show searched
-                each(self.li, function(id, li){
-                     if ( (li.text || li.innerHTML.replace(/<[^>]*>/g, "")).indexOf(val) >= 0 ) {
-                         var grp = self.li_group[id];
-                         if(grp) show(grp.el);
-                         show(li);
-                     }
-                });
-            }
+			if(val == undefined || val == "") {
+				//show all when finished
+				each(self.groups, function(n, grp) { show(grp.el) });
+				each(self.on_li, function(n,li) { show(li); });
+				each(self.li, function(n,li) { show(li); });
+			} else {
+				//5.8 add
+				if(options.search && options.search == 'remote') { //remote, enter key
+					(e.keyCode == 13) && self.trigger("search", [val, localSearch]);
+				} else {
+					localSearch();
+				}
+			}
 		});
+		
+	
 /*
 var a = $.online.firstChild;
 addEvent(a, "click", function(e){
@@ -5658,7 +5779,7 @@ self.trigger("offline");
 	},
     //FIXME Later: should be moved to model...
 	titleCount: function(){
-		var self = this, size = self.size, win = self.window, empty = self.$.empty, element = self.element;
+		var self = this, size = self.size, win = self.window, empty = self.$.empty, element = self.element, options = self.options;
         var ol_sz = 0;
         each(self.presences, function(id, p) { if(p.o) ol_sz++; });
 		win && win.title(self.options.title + "[" + ol_sz + "/" + (size ? size : "0") + "]");
@@ -5667,10 +5788,15 @@ self.trigger("offline");
 		}else{
 			hide(empty);
 		}
-		if(size > 8){
+		//5.8 remote search...
+		if(options.search && options.search == 'remote') {
 			self.scroll(true);
-		}else{
-			self.scroll(false);
+		} else {
+			if(size > 8){
+				self.scroll(true);
+			}else{
+				self.scroll(false);
+			}
 		}
 	},
 
@@ -6532,10 +6658,12 @@ widget("chatlink",
  * webim.$product.js:
  *
  * ui.addApp("chatbtn", {
- *  wrap: document.getElementById('wrap')
- *	elementId: null,
- * 	className: /webim-chatbtn/,
- *  autoInsertlink: true
+ *  wrap: document.getElementById('wrap'),
+ *  elementId: null,
+ * 	classRe: /webim-chatbtn/,
+ *  hrefRe: [/chat\/([^\/]+)/i],
+ *  autoInsertlink: false,
+ *  chatbox: false
  * });
  * 
  * TODO: 支持群组Link
@@ -6553,16 +6681,20 @@ widget("chatlink",
  * 
  */
 
-app("chatbtn", function(options){
+app("chatbtn", function(options) {
 	var ui = this, im = ui.im;
-	var chatbtn = ui.chatbtn = new webim.ui.chatbtn(null, options).bind("select", function(e, id){
-		ui.im.online();
-        id = id.substr("webim-chatid-".length);
-		ui.layout.addChat("buddy", id);
-		ui.layout.focusChat("buddy", id);
-		if( options && options.autoInsertlink ) {
-			var chat = ui.layout.chat( "buddy", id );
-			chat && chat.insert( window.location.href );
+	var chatbtn = ui.chatbtn = new webim.ui.chatbtn(null, options).bind("select", function(e, id, url){
+		if(options.chatbox) {
+			openChatbox(url);
+		} else {
+			ui.im.online();
+			id = id.substr("webim-chatid-".length);
+			ui.layout.addChat("buddy", id);
+			ui.layout.focusChat("buddy", id);
+			if( options && options.autoInsertlink ) {
+				var chat = ui.layout.chat( "buddy", id );
+				chat && chat.insert( window.location.href );
+			}
 		}
 	});
 	var grepVisible = function(a){ return a.show != "invisible" && a.show != "unavailable"};
@@ -6588,17 +6720,17 @@ app("chatbtn", function(options){
 widget("chatbtn",
 {
 	wrap: null,
-	re_id: [/chat\/([^\/]+)/i],
 	elementId: null,
-	className: /webim-chatbtn/
+	hrefRe: [/chat\/([^\/]+)/i],
+	classRe: /webim-chatbtn/
 },
 {
 	_init: function(){
 		var self = this, element = self.element, list = self.list = {}, 
 			options = self.options, anthors = self.anthors = {}, 
-			re_id = options.re_id, 
+			hrefRe = options.hrefRe,
 			elementId = options.elementId, 
-			className = options.className,
+			classRe = options.classRe,
 			wrap = options.wrap || document;
 
 		function parse_id(link, re){
@@ -6620,9 +6752,9 @@ widget("chatbtn",
 		} else {
 			a = wrap.getElementsByTagName("a");
 		}
-		a && each(a, function(i, el){
-			var id = parse_id(el.href, re_id), text = el.innerHTML;
-			if(id && children(el).length == 0 && text && (elementId || className.test(el.className))){
+		a && each(a, function(i, el) {
+			var id = parse_id(el.href, hrefRe), text = el.innerHTML;
+			if(id && children(el).length == 0 && text && (elementId || classRe.test(el.className))){
 				anthors[id] ? anthors[id].push(el) :(anthors[id] = [el]);
 				list[id] = {id: id, name: text};
 				var icon = createElement('<i class="webim-chaticon"><em></em></i>');
@@ -6630,11 +6762,14 @@ widget("chatbtn",
 				el.icon = icon;
 				el.title = i18n("offline");
 				el.id = 'webim-chatid-' + id;
-				addEvent(el, "click", function(e){
-					self.trigger("select", this.id);
-					stopPropagation(e);
-					preventDefault(e);
-				});
+				//5.8: don't respond 'click' on mobile device
+				if( !webim.isMobile() ) {
+					addEvent(el, "click", function(e) {
+						self.trigger("select", [this.id, el.href]);
+						stopPropagation(e);
+						preventDefault(e);
+					});
+				}
 			}
 		});
 	},
